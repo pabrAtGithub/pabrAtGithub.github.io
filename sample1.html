@@ -1,0 +1,117 @@
+<html>
+
+<head>
+    <style>
+        html, body { width: 100%; height: 100%; margin: 0px;}
+    </style>
+    <script>
+        'use strict';
+        function ready(fn) {
+            if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+                fn();
+            } else {
+                document.addEventListener('DOMContentLoaded', fn);
+            }
+        }
+        var acceleration = null;
+        function deviceMotionHandler(eventData) {
+                acceleration = eventData.accelerationIncludingGravity;
+        }
+        var posX = null;
+        var posY;
+        var fakeInit = true;
+
+        function step(timestamp) {
+            //console.log('Paint');
+            var htmlCanvas = document.getElementById('c1');
+            var ctx = htmlCanvas.getContext('2d');
+            if (ctx.canvas.width != window.innerWidth)
+            {
+                ctx.canvas.width  = window.innerWidth;
+                ctx.canvas.height = window.innerHeight;
+            }
+            ctx.fillStyle = "#89CFF0";
+            ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            var dw = ctx.canvas.width / 6;
+            var maxX = ctx.canvas.width - dw;
+            var dwHalf = dw / 2;
+            var dh = ctx.canvas.height / 3;
+            var maxY = ctx.canvas.height - dh;
+            var dhThird = dh / 3;
+            var dhHalfThird = dhThird / 2;
+            if (posX == null) {
+                console.log('Init pos');
+                posX = ctx.canvas.width / 2 - dwHalf;
+                posY = 0;
+            } else if (acceleration != null) {
+                var sensitivity = 4;
+                var down = acceleration.y < -sensitivity;
+                var up = acceleration.y > +sensitivity;
+                var left = acceleration.x < -sensitivity;
+                var right = acceleration.x > +sensitivity;
+                //console.log(`Acc ${acceleration.x},${acceleration.y}`);
+
+                if (down) {
+                    posY++;
+                }
+                if (up) {
+                    posY--;
+                }
+
+                if (posY < 0) {
+                    posY = 0;
+                } else if (posY > maxY) {
+                    posY = maxY;
+                }
+
+                if (left) {
+                    posX--;
+                }
+                if (right) {
+                    posX++;
+                }
+
+                if (posX < 0) {
+                    posX = 0;
+                } else if (posX > maxX) {
+                    posX = maxX;
+                }
+            } else if (fakeInit) {
+                console.log('Fake Init');
+                acceleration = new Object();
+                acceleration.y = -10;
+                acceleration.x = -10;
+            }
+            ctx.beginPath();
+            ctx.moveTo(posX + dwHalf, posY + 1 * dhThird);
+            ctx.lineTo(posX + dwHalf, posY + 2 * dhThird);
+            ctx.lineTo(posX, posY + 3 * dhThird);
+            ctx.moveTo(posX + dwHalf, posY + 2 * dhThird);
+            ctx.lineTo(posX + dw, posY + 3 * dhThird);
+            ctx.moveTo(posX, posY + dhThird + dhHalfThird);
+            ctx.lineTo(posX + dw, posY + dhThird + dhHalfThird);
+            ctx.moveTo(posX + dw, posY + dhHalfThird);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(posX + dwHalf, posY + dhHalfThird, dhHalfThird, 0, 2*Math.PI, false);
+            ctx.stroke();
+            window.requestAnimationFrame(step);
+        }
+
+        function init() {
+            if (window.DeviceMotionEvent) {
+                window.addEventListener('devicemotion', deviceMotionHandler, false);
+            } else {
+                console.log('no dev motion');
+            }
+            window.requestAnimationFrame(step);
+        }
+        ready(init);
+    </script>
+</head>
+
+<body>
+    <canvas id="c1"></canvas>
+</body>
+
+</html>
