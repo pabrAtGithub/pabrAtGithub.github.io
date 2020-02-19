@@ -2,7 +2,12 @@
 
 <head>
     <style>
-        html, body { width: 100%; height: 100%; margin: 0px;}
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0px;
+        }
     </style>
     <script>
         'use strict';
@@ -15,7 +20,7 @@
         }
         var acceleration = null;
         function deviceMotionHandler(eventData) {
-                acceleration = eventData.accelerationIncludingGravity;
+            acceleration = eventData.accelerationIncludingGravity;
         }
         var posX = null;
         var posY;
@@ -25,9 +30,8 @@
             //console.log('Paint');
             var htmlCanvas = document.getElementById('c1');
             var ctx = htmlCanvas.getContext('2d');
-            if (ctx.canvas.width != window.innerWidth)
-            {
-                ctx.canvas.width  = window.innerWidth;
+            if (ctx.canvas.width != window.innerWidth) {
+                ctx.canvas.width = window.innerWidth;
                 ctx.canvas.height = window.innerHeight;
             }
             ctx.fillStyle = "#89CFF0";
@@ -93,18 +97,40 @@
             ctx.moveTo(posX + dw, posY + dhHalfThird);
             ctx.stroke();
             ctx.beginPath();
-            ctx.arc(posX + dwHalf, posY + dhHalfThird, dhHalfThird, 0, 2*Math.PI, false);
+            ctx.arc(posX + dwHalf, posY + dhHalfThird, dhHalfThird, 0, 2 * Math.PI, false);
             ctx.stroke();
             window.requestAnimationFrame(step);
         }
 
+        function requestMotion() {
+            DeviceMotionEvent.requestPermission()
+                .then(response => {
+                    if (response == 'granted') {
+                        window.addEventListener('devicemotion', deviceMotionHandler, false);
+                        window.requestAnimationFrame(step);
+                    }
+                })
+                .catch(function (error) {
+                    console.log('requestPermission() failed');
+                    document.body.innerHTML += '<div>requestPermission() failed</div>';
+
+                })
+        }
+
         function init() {
-            if (window.DeviceMotionEvent) {
-                window.addEventListener('devicemotion', deviceMotionHandler, false);
+            if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                // iOS 13+
+                document.body.innerHTML += '<button onclick="requestMotion();">request Motion</button>';
             } else {
-                console.log('no dev motion');
+                // non iOS 13+
+                if (window.DeviceMotionEvent) {
+                    window.addEventListener('devicemotion', deviceMotionHandler, false);
+                    window.requestAnimationFrame(step);
+                } else {
+                    console.log('no dev motion');
+                    document.body.innerHTML += '<div>no dev motion</div>';
+                }
             }
-            window.requestAnimationFrame(step);
         }
         ready(init);
     </script>
